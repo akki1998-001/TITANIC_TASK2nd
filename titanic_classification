@@ -1,0 +1,55 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+
+# Load the Titanic dataset
+titanic_data = pd.read_csv('titanic.csv')  # Replace 'titanic.csv' with the actual filename or URL of your dataset
+
+# Explore the dataset
+print(titanic_data.head())
+
+# Handle missing values
+titanic_data = titanic_data.drop(['Cabin', 'Name', 'Ticket', 'PassengerId'], axis=1)
+titanic_data['Age'].fillna(titanic_data['Age'].median(), inplace=True)
+titanic_data['Embarked'].fillna(titanic_data['Embarked'].mode()[0], inplace=True)
+
+# Convert categorical variables to numerical
+titanic_data = pd.get_dummies(titanic_data, columns=['Sex', 'Embarked'], drop_first=True)
+
+# Split the data into features (X) and target variable (y)
+X = titanic_data.drop('Survived', axis=1)
+y = titanic_data['Survived']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Build a Random Forest model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred)
+classification_rep = classification_report(y_test, y_pred)
+
+print(f'Accuracy: {accuracy}')
+print(f'Confusion Matrix:\n{conf_matrix}')
+print(f'Classification Report:\n{classification_rep}')
+
+# Visualize feature importance
+feature_importance = model.feature_importances_
+features = X.columns
+sorted_idx = np.argsort(feature_importance)
+
+plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx])
+plt.yticks(range(len(sorted_idx)), [features[i] for i in sorted_idx])
+plt.xlabel('Feature Importance')
+plt.title('Random Forest Feature Importance')
+plt.show()
